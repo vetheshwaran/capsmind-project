@@ -145,6 +145,7 @@ input, select, textarea { font-family: inherit; }
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  pointer-events: none;
 }
 
 .sidebar.collapsed .nav-label { display: none; }
@@ -665,6 +666,7 @@ input, select, textarea { font-family: inherit; }
   .topbar { padding: 0 12px; }
   .logo-text { font-size: .95rem; }
   .btn-book { padding: 6px 12px; font-size: .82rem; }
+  .sidebar {display: none;}
 
   .main-content { padding: 10px 8px; }
 
