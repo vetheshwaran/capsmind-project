@@ -89,8 +89,6 @@ input, select, textarea { font-family: inherit; }
   left: 50%;
   transform: translateX(-50%);
 }
-.btn-book:hover { background: var(--primary-dark); }
-.btn-book:active { transform: scale(.97); }
 
 /* ---------- Layout ---------- */
 .layout {
