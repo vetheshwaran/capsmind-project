@@ -112,8 +112,7 @@ function renderCalendar() {
   $('calMonthLabel').textContent = `${MONTHS[m]} ${y}`;
 
   
-  const label = appointments.length ? appointments[0].doctor : '';
-  $('calDoctorLabel').textContent = label;
+  $('calDoctorLabel').textContent = 'All Appointments';
 
   if (calView === 'month') {
     grid.className = 'calendar-grid';
