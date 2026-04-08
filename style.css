@@ -64,6 +64,8 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
+  position: absolute;
+  left: 20px;
 }
 
 .logo-text {
