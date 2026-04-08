@@ -86,9 +86,6 @@ input, select, textarea { font-family: inherit; }
   cursor: pointer;
   transition: background var(--transition), transform .1s;
   white-space: nowrap;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 
