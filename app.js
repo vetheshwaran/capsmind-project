@@ -1,17 +1,20 @@
 /* ============================================================
-   CapMinds Appointment Scheduler – app.js 
+   CapMinds Appointment Scheduler 
    ============================================================ */
 
 'use strict';
 
+
 let appointments = JSON.parse(localStorage.getItem('capminds_appts') || '[]');
 let editId = null;
 let currentDate = new Date();
-let calView = 'month';
+let calView = 'month'; 
 let sidebarCollapsed = false;
-let currentView = 'calendar';
+let currentView = 'calendar'; 
+
 
 const $ = id => document.getElementById(id);
+const fmt = d => d.toLocaleDateString('en-GB').replace(/\//g, '/'); // DD/MM/YYYY
 
 function saveToStorage() {
   localStorage.setItem('capminds_appts', JSON.stringify(appointments));
@@ -22,12 +25,14 @@ function genId() {
 }
 
 function formatDateDisplay(dateStr) {
+  
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-');
   return `${d}/${m}/${y}`;
 }
 
 function formatTime(timeStr) {
+  
   if (!timeStr) return '';
   const [h, mi] = timeStr.split(':').map(Number);
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -54,6 +59,7 @@ function showToast(msg, type = '') {
   setTimeout(() => t.classList.add('hidden'), 2800);
 }
 
+
 function confirmDelete(id) {
   if (window.confirm('Delete this appointment?')) {
     appointments = appointments.filter(a => a.id !== id);
@@ -63,67 +69,15 @@ function confirmDelete(id) {
   }
 }
 
-/* ---- Sidebar (desktop collapse + mobile overlay) ---- */
+
 const sidebar = $('sidebar');
-
-// Inject backdrop element for mobile overlay
-const backdrop = document.createElement('div');
-backdrop.className = 'sidebar-backdrop';
-backdrop.id = 'sidebarBackdrop';
-document.querySelector('.layout').prepend(backdrop);
-
-function isMobile() {
-  return window.innerWidth <= 600;
-}
-
-function closeSidebar() {
-  if (isMobile()) {
-    sidebar.classList.remove('mobile-open');
-    backdrop.classList.remove('visible');
-  } else {
-    sidebarCollapsed = true;
-    sidebar.classList.add('collapsed');
-    $('sidebarChevron').textContent = '»';
-  }
-}
-
-function openSidebar() {
-  if (isMobile()) {
-    sidebar.classList.add('mobile-open');
-    backdrop.classList.add('visible');
-  } else {
-    sidebarCollapsed = false;
-    sidebar.classList.remove('collapsed');
-    $('sidebarChevron').textContent = '«';
-  }
-}
-
 $('sidebarToggle').addEventListener('click', () => {
-  if (isMobile()) {
-    if (sidebar.classList.contains('mobile-open')) {
-      closeSidebar();
-    } else {
-      openSidebar();
-    }
-  } else {
-    sidebarCollapsed = !sidebarCollapsed;
-    sidebar.classList.toggle('collapsed', sidebarCollapsed);
-    $('sidebarChevron').textContent = sidebarCollapsed ? '»' : '«';
-  }
+  sidebarCollapsed = !sidebarCollapsed;
+  sidebar.classList.toggle('collapsed', sidebarCollapsed);
+  $('sidebarChevron').textContent = sidebarCollapsed ? '»' : '«';
 });
 
-backdrop.addEventListener('click', () => closeSidebar());
 
-// Close sidebar on nav item click (mobile)
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', e => {
-    e.preventDefault();
-    switchView(el.dataset.view);
-    if (isMobile()) closeSidebar();
-  });
-});
-
-/* ---- View switching ---- */
 function switchView(view) {
   currentView = view;
   $('viewCalendar').classList.toggle('hidden', view !== 'calendar');
@@ -135,15 +89,17 @@ function switchView(view) {
   if (view === 'calendar') renderCalendar();
 }
 
-/* ---- Calendar ---- */
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    switchView(el.dataset.view);
+  });
+});
+
+
 const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-const DAYS_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
-
-function getDayLabels() {
-  return window.innerWidth <= 600 ? DAYS_SHORT : DAYS;
-}
 
 function renderCalendar() {
   const grid = $('calendarGrid');
@@ -155,7 +111,9 @@ function renderCalendar() {
 
   $('calMonthLabel').textContent = `${MONTHS[m]} ${y}`;
 
-  $('calDoctorLabel').textContent = 'All Appointments';
+  
+  const label = appointments.length ? appointments[0].doctor : '';
+  $('calDoctorLabel').textContent = label;
 
   if (calView === 'month') {
     grid.className = 'calendar-grid';
@@ -167,8 +125,8 @@ function renderCalendar() {
 }
 
 function renderMonthGrid(grid, y, m, today) {
-  const dayLabels = getDayLabels();
-  dayLabels.forEach((d, i) => {
+  
+  DAYS.forEach((d, i) => {
     const h = document.createElement('div');
     h.className = 'cal-day-header' + (i === 5 ? ' friday' : '');
     h.textContent = d;
@@ -208,6 +166,7 @@ function renderMonthGrid(grid, y, m, today) {
     dateEl.textContent = day;
     cell.appendChild(dateEl);
 
+    // Events for this date
     const dayAppts = appointments.filter(a => a.date === dateStr);
     if (dayAppts.length) {
       const eventsEl = document.createElement('div');
@@ -225,23 +184,27 @@ function renderMonthGrid(grid, y, m, today) {
       cell.appendChild(eventsEl);
     }
 
-    cell.addEventListener('click', () => openModalForDate(dateStr));
+   
+    cell.addEventListener('click', () => {
+      openModalForDate(dateStr);
+    });
+
     grid.appendChild(cell);
   }
 }
 
 function renderWeekGrid(grid, y, m, today) {
-  const dayLabels = getDayLabels();
+  
   const base = new Date(currentDate);
   const dow = base.getDay();
   base.setDate(base.getDate() - dow);
 
-  dayLabels.forEach((d, i) => {
+  DAYS.forEach((d, i) => {
     const h = document.createElement('div');
     h.className = 'cal-day-header' + (i === 5 ? ' friday' : '');
     const dt = new Date(base);
     dt.setDate(base.getDate() + i);
-    h.textContent = window.innerWidth <= 600 ? `${d} ${dt.getDate()}` : `${d} ${dt.getDate()}`;
+    h.textContent = `${d} ${dt.getDate()}`;
     grid.appendChild(h);
   });
 
@@ -297,14 +260,7 @@ $('calViewSelect').addEventListener('change', e => {
   renderCalendar();
 });
 
-// Re-render calendar on resize so day labels update (mobile ↔ desktop)
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(renderCalendar, 200);
-});
 
-/* ---- Dashboard ---- */
 function getFilteredAppointments() {
   let list = [...appointments];
   const pat = $('filterPatient').value.trim().toLowerCase();
@@ -347,6 +303,7 @@ function renderDashboard() {
     tbody.appendChild(tr);
   });
 
+ 
   const emptyCount = Math.max(0, MIN_ROWS - list.length);
   for (let i = 0; i < emptyCount; i++) {
     const tr = document.createElement('tr');
@@ -355,6 +312,7 @@ function renderDashboard() {
     tbody.appendChild(tr);
   }
 
+ 
   tbody.querySelectorAll('.btn-edit').forEach(btn =>
     btn.addEventListener('click', () => openEditModal(btn.dataset.id)));
   tbody.querySelectorAll('.btn-delete').forEach(btn =>
@@ -365,14 +323,14 @@ $('btnUpdate').addEventListener('click', renderDashboard);
 $('filterPatient').addEventListener('input', renderDashboard);
 $('filterDoctor').addEventListener('input', renderDashboard);
 
-/* ---- Modal ---- */
+
 function clearForm() {
-  ['fPatient', 'fDoctor', 'fHospital', 'fSpecialty'].forEach(id => $(id).value = '');
+  ['fPatient','fDoctor','fHospital','fSpecialty'].forEach(id => $(id).value = '');
   $('fDate').value = '';
   $('fTime').value = '';
   $('fReason').value = '';
-  ['fPatient', 'fDoctor', 'fHospital', 'fSpecialty', 'fDate', 'fTime'].forEach(id => $(id).classList.remove('error'));
-  ['errPatient', 'errDoctor', 'errHospital', 'errSpecialty', 'errDate', 'errTime'].forEach(id => $(id).textContent = '');
+  ['fPatient','fDoctor','fHospital','fSpecialty','fDate','fTime'].forEach(id => $(id).classList.remove('error'));
+  ['errPatient','errDoctor','errHospital','errSpecialty','errDate','errTime'].forEach(id => $(id).textContent = '');
 }
 
 function openModal() {
@@ -416,7 +374,7 @@ $('modalClose').addEventListener('click', closeModal);
 $('btnCancel').addEventListener('click', closeModal);
 $('modalOverlay').addEventListener('click', e => { if (e.target === $('modalOverlay')) closeModal(); });
 
-/* ---- Validation ---- */
+
 function validate() {
   let ok = true;
   const rules = [
@@ -442,13 +400,15 @@ function validate() {
   return ok;
 }
 
-['fPatient', 'fDoctor', 'fHospital', 'fSpecialty', 'fDate', 'fTime'].forEach((id, i) => {
-  const errIds = ['errPatient', 'errDoctor', 'errHospital', 'errSpecialty', 'errDate', 'errTime'];
+
+['fPatient','fDoctor','fHospital','fSpecialty','fDate','fTime'].forEach((id, i) => {
+  const errIds = ['errPatient','errDoctor','errHospital','errSpecialty','errDate','errTime'];
   $(id).addEventListener('change', () => {
     $(id).classList.remove('error');
     $(errIds[i]).textContent = '';
   });
 });
+
 
 $('btnSave').addEventListener('click', () => {
   if (!validate()) return;
@@ -477,14 +437,16 @@ $('btnSave').addEventListener('click', () => {
   closeModal();
   renderAll();
 
+ 
   const [y, m] = appt.date.split('-').map(Number);
   currentDate = new Date(y, m - 1, 1);
 });
 
-/* ---- Render all ---- */
+
 function renderAll() {
   renderCalendar();
   if (currentView === 'dashboard') renderDashboard();
 }
+
 
 renderCalendar();
